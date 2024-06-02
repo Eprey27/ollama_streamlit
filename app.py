@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 import time
+import json
 import logging
 from streamlit.delta_generator import DeltaGenerator
 
@@ -35,8 +36,8 @@ def create_model(name, modelfile):
 # Crear los modelos al iniciar Streamlit
 def initialize_models():
     st.write("Initializing models...")
-    create_model("llama3", "FROM llama3")
-    # create_model("mario", "FROM llama3\nSYSTEM You are mario from Super Mario Bros.")
+    # create_model("llama3", "FROM llama3")
+    create_model("mario", "FROM llama3\nSYSTEM You are mario from Super Mario Bros.")
 
 # Verificar la conexión con Ollama y crear los modelos si es necesario
 def check_ollama_connection():
