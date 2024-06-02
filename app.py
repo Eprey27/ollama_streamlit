@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 # URL de la API para interactuar con el modelo LLaMA3
 CREATE_URL = "http://ollama:11434/api/create"
 API_URL = os.getenv("OLLAMA_API_URL", "http://ollama:11434/api/generate")
+TAGS_URL = "http://ollama:11434/api/tags"
 
 # Función para crear un modelo
 def create_model(name, modelfile):
@@ -48,19 +49,36 @@ def check_ollama_connection():
     except requests.exceptions.RequestException as e:
         st.error(f"Failed to connect to Ollama API: {e}")
 
-st.title("Chat con LLaMA3 y Mario")
+# Obtener la lista de modelos disponibles
+def get_available_models():
+    try:
+        response = requests.get(TAGS_URL)
+        response.raise_for_status()
+        models = response.json().get("models", [])
+        return [model["name"] for model in models]
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to fetch models: {e}")
+        return []
+
+st.title("Chat con Modelos LLaMA")
 
 # Verificar la conexión al inicio
 check_ollama_connection()
 
-def get_response(prompt):
+# Obtener la lista de modelos disponibles
+available_models = get_available_models()
+
+# Seleccionar el modelo
+selected_model = st.selectbox("Selecciona un modelo", available_models)
+
+def get_response(model, prompt):
     payload = {
-        "model": "llama3",
+        "model": model,
         "prompt": prompt,
         "stream": False  # Ajusta esto según tus necesidades
     }
     try:
-        logging.debug(f"Sending prompt to model: {payload}")
+        logging.debug(f"Sending prompt to model '{model}': {payload}")
         response = requests.post(API_URL, json=payload)
         response.raise_for_status()  # Lanzará una excepción para códigos de estado 4xx/5xx
         logging.debug(f"Raw response: {response.text}")
@@ -72,16 +90,19 @@ def get_response(prompt):
         logging.error(f"Failed to parse JSON: {e}")
         return ""
 
+# Mantener el historial del chat
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
 user_input = st.text_input("You:", key="user_input")
 
 if st.button("Send"):
-    if user_input:
+    if user_input and selected_model:
         st.session_state.conversation.append(("You", user_input))
-        response = get_response(user_input)
-        st.session_state.conversation.append(("LLaMA3", response))
+        response = get_response(selected_model, user_input)
+        st.session_state.conversation.append((selected_model, response))
 
+# Mostrar el historial del chat
+st.write("## Chat History")
 for speaker, text in st.session_state.conversation:
     st.write(f"**{speaker}:** {text}")
