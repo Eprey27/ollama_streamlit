@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
+import os
 
 # URL de la API para interactuar con el modelo LLaMA3
-API_URL = "http://ollama:8041/predict"
+API_URL = os.getenv("OLLAMA_API_URL", "http://ollama:11434/predict")
 
 st.title("Chat con LLaMA3")
 
