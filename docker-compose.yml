@@ -2,8 +2,6 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama_llama3
-    volumes:
-      - n:/ollama/llama3/models:/models
     environment:
       - MODEL_NAME=llama3
     command: ["start"]
