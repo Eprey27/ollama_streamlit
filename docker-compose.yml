@@ -1,0 +1,27 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_llama3
+    volumes:
+      - n:/ollama/llama3:/models
+    environment:
+      - MODEL_NAME=llama3
+    command: ["start"]
+    ports:
+      - "8041:8000"
+
+  streamlit:
+    build: .
+    container_name: streamlit_ui
+    ports:
+      - "8501:8501"
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: n:/ollama/llama3
