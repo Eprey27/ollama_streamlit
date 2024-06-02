@@ -3,6 +3,7 @@ import requests
 import os
 import time
 import logging
+from streamlit.delta_generator import DeltaGenerator
 
 # Configurar logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -71,23 +72,35 @@ available_models = get_available_models()
 # Seleccionar el modelo
 selected_model = st.selectbox("Selecciona un modelo", available_models)
 
-def get_response(model, prompt):
+def get_response(model, prompt, response_container: DeltaGenerator):
     payload = {
         "model": model,
         "prompt": prompt,
-        "stream": False  # Ajusta esto según tus necesidades
+        "stream": True  # Habilitar streaming
     }
     try:
         logging.debug(f"Sending prompt to model '{model}': {payload}")
-        response = requests.post(API_URL, json=payload)
+        response = requests.post(API_URL, json=payload, stream=True)
         response.raise_for_status()  # Lanzará una excepción para códigos de estado 4xx/5xx
-        logging.debug(f"Raw response: {response.text}")
-        return response.json().get("response", "")
+
+        full_response = ""
+        for line in response.iter_lines():
+            if line:
+                part = line.decode('utf-8')
+                logging.debug(f"Received part: {part}")
+                response_data = json.loads(part)
+                token = response_data.get("response", "")
+                full_response += token
+                response_container.markdown(f"**{model}:** {full_response}")
+
+        return full_response
     except requests.exceptions.RequestException as e:
         logging.error(f"Request failed: {e}")
+        response_container.error(f"Request failed: {e}")
         return ""
     except ValueError as e:
         logging.error(f"Failed to parse JSON: {e}")
+        response_container.error(f"Failed to parse JSON: {e}")
         return ""
 
 # Mantener el historial del chat
@@ -99,7 +112,8 @@ user_input = st.text_input("You:", key="user_input")
 if st.button("Send"):
     if user_input and selected_model:
         st.session_state.conversation.append(("You", user_input))
-        response = get_response(selected_model, user_input)
+        response_container = st.empty()  # Contenedor temporal para mostrar la respuesta en tiempo real
+        response = get_response(selected_model, user_input, response_container)
         st.session_state.conversation.append((selected_model, response))
 
 # Mostrar el historial del chat
