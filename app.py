@@ -35,7 +35,7 @@ def create_model(name, modelfile):
 def initialize_models():
     st.write("Initializing models...")
     create_model("llama3", "FROM llama3")
-    create_model("mario", "FROM llama3\nSYSTEM You are mario from Super Mario Bros.")
+    # create_model("mario", "FROM llama3\nSYSTEM You are mario from Super Mario Bros.")
 
 # Verificar la conexión con Ollama y crear los modelos si es necesario
 def check_ollama_connection():
