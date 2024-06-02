@@ -3,7 +3,7 @@ import requests
 import os
 
 # URL de la API para interactuar con el modelo LLaMA3
-API_URL = "http://ollama:11434/api/generate"
+API_URL = os.getenv("OLLAMA_API_URL", "http://ollama:11434/api/generate")
 
 st.title("Chat con LLaMA3")
 
