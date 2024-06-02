@@ -6,7 +6,7 @@ services:
     container_name: ollama_llama3
     environment:
       - MODEL_NAME=llama3
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=DEBUG 
     command: ["start"]
     ports:
       - "11434:11434"

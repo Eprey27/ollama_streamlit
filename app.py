@@ -2,6 +2,10 @@ import streamlit as st
 import requests
 import os
 import time
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # URL de la API para interactuar con el modelo LLaMA3
 CREATE_URL = "http://ollama:11434/api/create"
@@ -16,12 +20,13 @@ def create_model(name, modelfile):
     retries = 5
     for i in range(retries):
         try:
+            logging.debug(f"Iniciando la creación del modelo '{name}' con modelfile: {modelfile}")
             response = requests.post(CREATE_URL, json=payload)
             response.raise_for_status()
             st.write(f"Model '{name}' created successfully.")
             return
         except requests.exceptions.RequestException as e:
-            st.error(f"Request to create model '{name}' failed (attempt {i+1}/{retries}): {e}")
+            logging.error(f"Request to create model '{name}' failed (attempt {i+1}/{retries}): {e}")
             time.sleep(5)  # Esperar 5 segundos antes de reintentar
     st.error(f"Error: Could not create model '{name}' after {retries} attempts.")
 
@@ -55,15 +60,16 @@ def get_response(prompt):
         "stream": False  # Ajusta esto según tus necesidades
     }
     try:
+        logging.debug(f"Sending prompt to model: {payload}")
         response = requests.post(API_URL, json=payload)
         response.raise_for_status()  # Lanzará una excepción para códigos de estado 4xx/5xx
-        st.write(f"Raw response: {response.text}")  # Imprime la respuesta completa para depuración
+        logging.debug(f"Raw response: {response.text}")
         return response.json().get("response", "")
     except requests.exceptions.RequestException as e:
-        st.error(f"Request failed: {e}")
+        logging.error(f"Request failed: {e}")
         return ""
     except ValueError as e:
-        st.error(f"Failed to parse JSON: {e}")
+        logging.error(f"Failed to parse JSON: {e}")
         return ""
 
 if 'conversation' not in st.session_state:
