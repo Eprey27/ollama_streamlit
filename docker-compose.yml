@@ -1,9 +1,12 @@
+version: '3.8'
+
 services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama_llama3
     environment:
       - MODEL_NAME=llama3
+      - LOG_LEVEL=DEBUG
     command: ["start"]
     ports:
       - "11434:11434"
